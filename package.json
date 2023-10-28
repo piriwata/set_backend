@@ -1,0 +1,14 @@
+{
+	"name": "setcards-server",
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "vite dev"
+	},
+	"devDependencies": {
+		"vite": "^4.4.2"
+	},
+	"type": "module",
+	"dependencies": {
+		"socket.io": "^4.7.2"
+	}
+}
