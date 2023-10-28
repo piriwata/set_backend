@@ -2,13 +2,13 @@
 	"name": "setcards-server",
 	"version": "0.0.1",
 	"scripts": {
-		"dev": "vite dev"
-	},
-	"devDependencies": {
-		"vite": "^4.4.2"
+		"start": "node server.js"
 	},
 	"type": "module",
 	"dependencies": {
-		"socket.io": "^4.7.2"
+		"socket.io": "^4.7"
+	},
+	"engines": {
+		"node": "v16"
 	}
 }
