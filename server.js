@@ -17,8 +17,7 @@ const a_score_que = [];
 const o_score = {};
 const c_score_max = 27;
 
-const get_card = () => {
-
+const get_a_card = () => {
     const get_card_idx = Math.floor(Math.random()*(a_card_deck.length));
     const get_card_info = a_card_deck[get_card_idx];
 
@@ -29,18 +28,15 @@ const get_card = () => {
 }
 
 const change_all_client_cards = (io) => {
-
     console.log("Delayed for 3 miniutes.");
 
-    if (a_card_deck.length < 12)
-    {
+    if (a_card_deck.length < 12) {
         // cards is less than 1
         a_card_deck = a_card_set_org.slice();
     }
 
-    for (let i = 0; i < c_card_num_on_field; i ++)
-    {
-        a_client_cards.splice(i, 1, get_card());
+    for (let i = 0; i < c_card_num_on_field; i ++) {
+        a_client_cards.splice(i, 1, get_a_card());
     }
 
     io.emit("new_cards_set", a_client_cards);
@@ -82,9 +78,8 @@ a_color.forEach(co => {
 
 a_card_deck = a_card_set_org.slice();
 
-for (let i = 0; i < c_card_num_on_field; i ++)
-{
-    a_client_cards.push(get_card());
+for (let i = 0; i < c_card_num_on_field; i ++) {
+    a_client_cards.push(get_a_card());
 }
 
 /* <- Initialization of set card */
@@ -102,8 +97,7 @@ io.on("connection", (socket) => {
     console.log("Client has connected!");
 
     socket.emit("new_cards_set", a_client_cards);
-    if (setTimeout_id === null)
-    {
+    if (setTimeout_id === null) {
         setTimeout_id = setTimeout(() => {
             change_all_client_cards(io);
         }, c_time_out_ms);
@@ -120,32 +114,22 @@ io.on("connection", (socket) => {
             .map((kind) => new Set([0, 1, 2].map(idx => a_client_cards[ans[idx]][kind])))
             .every(set => set.size !== 2);
 
-        if (correct_answer)
-        {
+        if (correct_answer) {
             socket.emit("your_answer_is_correct");
-            cal_score(socket.id);
+            update_current_score(socket.id);
 
-            if (a_client_cards.length > c_card_num_on_field)
-            {
-                // cards is more than 12
-                ans.sort().reverse().forEach(idx => a_client_cards.splice(idx, 1));
-            } else {
-
-                if (a_card_deck.length <= 0)
-                {
+                if (a_card_deck.length <= 0) {
                     // cards is less than 1
                     a_card_deck = a_card_set_org.slice();
 
-                    for (let i = 0; i < c_card_num_on_field; i ++)
-                    {
-                        a_client_cards.splice(i, 1, get_card());
+                    for (let i = 0; i < c_card_num_on_field; i ++) {
+                        a_client_cards.splice(i, 1, get_a_card());
                     }
 
                 } else {
                     // Discard the cards that was used for the answer
-                    ans.forEach(idx => a_client_cards.splice(idx, 1, get_card()));
-                }    
-            }
+                    ans.forEach(idx => a_client_cards.splice(idx, 1, get_a_card()));
+                }
 
             io.emit("new_cards_set", a_client_cards, o_score);
             console.log(o_score);
