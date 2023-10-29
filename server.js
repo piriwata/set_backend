@@ -12,8 +12,11 @@ const c_card_num_on_field = 12;
 const c_time_out_ms = 60000;
 let setTimeout_id = null;
 
-const get_card = () => {
+const a_score_que = [];
+const o_score = {};
+const c_score_max = 27;
 
+const get_a_card = () => {
     const get_card_idx = Math.floor(Math.random()*(a_card_deck.length));
     const get_card_info = a_card_deck[get_card_idx];
 
@@ -24,24 +27,37 @@ const get_card = () => {
 }
 
 const change_all_client_cards = (io) => {
-
     console.log("Delayed for 3 miniutes.");
 
-    if (a_card_deck.length < 12)
-    {
+    if (a_card_deck.length < 12) {
         // cards is less than 1
         a_card_deck = a_card_set_org.slice();
     }
 
-    for (let i = 0; i < c_card_num_on_field; i ++)
-    {
-        a_client_cards.splice(i, 1, get_card());
+    for (let i = 0; i < c_card_num_on_field; i ++) {
+        a_client_cards.splice(i, 1, get_a_card());
     }
 
     io.emit("new_cards_set", a_client_cards);
     setTimeout_id = setTimeout(() => {
         change_all_client_cards(io);
     }, c_time_out_ms);
+}
+
+const update_current_score = (corrected_socket_id) => {
+    o_score[corrected_socket_id] = (o_score[corrected_socket_id] === undefined) ? (1) : (o_score[corrected_socket_id] + 1);
+    a_score_que.push(corrected_socket_id);
+
+    // total scores is capped
+    if (a_score_que.length > c_score_max) {
+        const the_most_past_corrected_socket_id = a_score_que.shift();
+        o_score[the_most_past_corrected_socket_id] -= 1;
+
+        // delete the socket_id whose score is 0 from the queue
+        if (o_score[the_most_past_corrected_socket_id] <= 0) {
+            delete o_score[the_most_past_corrected_socket_id];
+        }
+    }
 }
 
 /* Initialization of set card -> */
@@ -57,9 +73,8 @@ a_color.forEach(co => {
 
 a_card_deck = a_card_set_org.slice();
 
-for (let i = 0; i < c_card_num_on_field; i ++)
-{
-    a_client_cards.push(get_card());
+for (let i = 0; i < c_card_num_on_field; i ++) {
+    a_client_cards.push(get_a_card());
 }
 
 /* <- Initialization of set card */
@@ -77,8 +92,7 @@ io.on("connection", (socket) => {
     console.log("Client has connected!");
 
     socket.emit("new_cards_set", a_client_cards);
-    if (setTimeout_id === null)
-    {
+    if (setTimeout_id === null) {
         setTimeout_id = setTimeout(() => {
             change_all_client_cards(io);
         }, c_time_out_ms);
@@ -95,33 +109,27 @@ io.on("connection", (socket) => {
             .map((kind) => new Set([0, 1, 2].map(idx => a_client_cards[ans[idx]][kind])))
             .every(set => set.size !== 2);
 
-        if (correct_answer)
-        {
-            io.emit("name_of_correct_answer");
+        if (correct_answer) {
+            socket.emit("your_answer_is_correct");
+            update_current_score(socket.id);
 
-            if (a_client_cards.length > c_card_num_on_field)
-            {
-                // cards is more than 12
-                ans.sort().reverse().forEach(idx => a_client_cards.splice(idx, 1));
-            } else {
-
-                if (a_card_deck.length <= 0)
-                {
+                if (a_card_deck.length <= 0) {
                     // cards is less than 1
                     a_card_deck = a_card_set_org.slice();
 
-                    for (let i = 0; i < c_card_num_on_field; i ++)
-                    {
-                        a_client_cards.splice(i, 1, get_card());
+                    for (let i = 0; i < c_card_num_on_field; i ++) {
+                        a_client_cards.splice(i, 1, get_a_card());
                     }
 
                 } else {
-                    // Discard the cards that was used for the answer
-                    ans.forEach(idx => a_client_cards.splice(idx, 1, get_card()));
-                }    
-            }
+                    // Replace the used cards to new cards
+                    ans.forEach(idx => a_client_cards.splice(idx, 1, get_a_card()));
+                }
 
-            io.emit("new_cards_set", a_client_cards);
+            io.emit("new_cards_set", a_client_cards, o_score);
+            console.log(o_score);
+        } else {
+            socket.emit("your_answer_is_not_correct");
         }
     });
 });
