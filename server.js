@@ -122,7 +122,7 @@ io.on("connection", (socket) => {
                     }
 
                 } else {
-                    // Discard the cards that was used for the answer
+                    // Replace the used cards to new cards
                     ans.forEach(idx => a_client_cards.splice(idx, 1, get_a_card()));
                 }
 
