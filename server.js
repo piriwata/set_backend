@@ -12,7 +12,6 @@ const c_card_num_on_field = 12;
 const c_time_out_ms = 60000;
 let setTimeout_id = null;
 
-let total_score = 0;
 const a_score_que = [];
 const o_score = {};
 const c_score_max = 27;
@@ -45,22 +44,18 @@ const change_all_client_cards = (io) => {
     }, c_time_out_ms);
 }
 
-const cal_score = (socket_id) => {
-    
-    o_score[socket_id] = (o_score[socket_id] === undefined) ? (1) : (o_score[socket_id] + 1);
-    a_score_que.push(socket_id);
+const update_current_score = (corrected_socket_id) => {
+    o_score[corrected_socket_id] = (o_score[corrected_socket_id] === undefined) ? (1) : (o_score[corrected_socket_id] + 1);
+    a_score_que.push(corrected_socket_id);
 
-    if (total_score < c_score_max)
-    {
-        total_score += 1;
+    // total scores is capped
+    if (a_score_que.length > c_score_max) {
+        const the_most_past_corrected_socket_id = a_score_que.shift();
+        o_score[the_most_past_corrected_socket_id] -= 1;
 
-    } else {
-        // delete score
-        const delete_score_id = a_score_que.shift();
-        o_score[delete_score_id] -= 1;
-        if (o_score[delete_score_id] <= 0)
-        {
-            delete o_score[delete_score_id];
+        // delete the socket_id whose score is 0 from the queue
+        if (o_score[the_most_past_corrected_socket_id] <= 0) {
+            delete o_score[the_most_past_corrected_socket_id];
         }
     }
 }
