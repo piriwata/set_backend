@@ -27,7 +27,7 @@ const change_all_client_cards = (io) => {
 
     console.log("Delayed for 3 miniutes.");
 
-    if (a_card_deck.length <= 0)
+    if (a_card_deck.length < 12)
     {
         // cards is less than 1
         a_card_deck = a_card_set_org.slice();
