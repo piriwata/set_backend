@@ -12,6 +12,11 @@ const c_card_num_on_field = 12;
 const c_time_out_ms = 60000;
 let setTimeout_id = null;
 
+let total_score = 0;
+const a_score_que = [];
+const o_score = {};
+const c_score_max = 27;
+
 const get_card = () => {
 
     const get_card_idx = Math.floor(Math.random()*(a_card_deck.length));
@@ -42,6 +47,26 @@ const change_all_client_cards = (io) => {
     setTimeout_id = setTimeout(() => {
         change_all_client_cards(io);
     }, c_time_out_ms);
+}
+
+const cal_score = (socket_id) => {
+    
+    o_score[socket_id] = (o_score[socket_id] === undefined) ? (1) : (o_score[socket_id] + 1);
+    a_score_que.push(socket_id);
+
+    if (total_score < c_score_max)
+    {
+        total_score += 1;
+
+    } else {
+        // delete score
+        const delete_score_id = a_score_que.shift();
+        o_score[delete_score_id] -= 1;
+        if (o_score[delete_score_id] <= 0)
+        {
+            delete o_score[delete_score_id];
+        }
+    }
 }
 
 /* Initialization of set card -> */
@@ -97,7 +122,8 @@ io.on("connection", (socket) => {
 
         if (correct_answer)
         {
-            io.emit("name_of_correct_answer");
+            socket.emit("your_answer_is_correct");
+            cal_score(socket.id);
 
             if (a_client_cards.length > c_card_num_on_field)
             {
@@ -121,7 +147,10 @@ io.on("connection", (socket) => {
                 }    
             }
 
-            io.emit("new_cards_set", a_client_cards);
+            io.emit("new_cards_set", a_client_cards, o_score);
+            console.log(o_score);
+        } else {
+            socket.emit("your_answer_is_not_correct");
         }
     });
 });
