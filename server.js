@@ -9,7 +9,7 @@ const a_client_cards = [];
 let a_card_deck = [];
 
 const c_card_num_on_field = 12;
-const c_time_out_ms = "60000";
+const c_time_out_ms = 60000;
 let setTimeout_id = null;
 
 const get_card = () => {
@@ -85,12 +85,15 @@ io.on("connection", (socket) => {
     }
 
     socket.on("reply", (ans) => {
+        // reset timer
         clearTimeout(setTimeout_id);
+        setTimeout_id = setTimeout(() => {
+            change_all_client_cards(io);
+        }, c_time_out_ms);
 
-        console.log(a_client_cards);
         const correct_answer = [0, 1, 2, 3]
             .map((kind) => new Set([0, 1, 2].map(idx => a_client_cards[ans[idx]][kind])))
-            .every(set => set.size != 2);
+            .every(set => set.size !== 2);
 
         if (correct_answer)
         {
@@ -119,11 +122,6 @@ io.on("connection", (socket) => {
             }
 
             io.emit("new_cards_set", a_client_cards);
-            setTimeout_id = setTimeout(() => {
-                change_all_client_cards(io);
-            }, c_time_out_ms);
-            
-            console.log(a_client_cards);
         }
     });
 });
