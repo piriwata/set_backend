@@ -38,7 +38,7 @@ const change_all_client_cards = (io) => {
         a_client_cards.splice(i, 1, get_a_card());
     }
 
-    io.emit("new_cards_set", a_client_cards);
+    io.emit("new_cards_set", a_client_cards, o_score);
     setTimeout_id = setTimeout(() => {
         change_all_client_cards(io);
     }, c_time_out_ms);
@@ -91,7 +91,7 @@ console.log("Server started.");
 io.on("connection", (socket) => {
     console.log("Client has connected!");
 
-    socket.emit("new_cards_set", a_client_cards);
+    socket.emit("new_cards_set", a_client_cards, o_score);
     if (setTimeout_id === null) {
         setTimeout_id = setTimeout(() => {
             change_all_client_cards(io);
