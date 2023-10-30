@@ -16,6 +16,9 @@ const a_score_que = [];
 const o_score = {};
 const c_score_max = 27;
 
+let cards_set_id = 0;
+let a_id_touch_wrong_cards = new Set();
+
 const get_a_card = () => {
     const get_card_idx = Math.floor(Math.random()*(a_card_deck.length));
     const get_card_info = a_card_deck[get_card_idx];
@@ -38,7 +41,9 @@ const change_all_client_cards = (io) => {
         a_client_cards.splice(i, 1, get_a_card());
     }
 
-    io.emit("new_cards_set", a_client_cards, o_score);
+    cards_set_id ++;
+    a_id_touch_wrong_cards = new Set();
+    io.emit("new_cards_set", a_client_cards, o_score, cards_set_id);
     setTimeout_id = setTimeout(() => {
         change_all_client_cards(io);
     }, c_time_out_ms);
@@ -98,7 +103,17 @@ io.on("connection", (socket) => {
         }, c_time_out_ms);
     }
 
-    socket.on("reply", (ans) => {
+    socket.on("reply", (ans, ans_cards_set_id) => {
+        if (ans_cards_set_id !== cards_set_id) {
+            // this answer id is different from current question is
+            return;
+        }
+
+        if (a_id_touch_wrong_cards.has(socket.id)) {
+            // this id has toushed wrong cards
+            return;
+        }
+        
         // reset timer
         clearTimeout(setTimeout_id);
         setTimeout_id = setTimeout(() => {
@@ -126,9 +141,12 @@ io.on("connection", (socket) => {
                     ans.forEach(idx => a_client_cards.splice(idx, 1, get_a_card()));
                 }
 
-            io.emit("new_cards_set", a_client_cards, o_score);
+            cards_set_id ++;
+            a_id_touch_wrong_cards = new Set();
+            io.emit("new_cards_set", a_client_cards, o_score, cards_set_id);
             console.log(o_score);
         } else {
+            a_id_touch_wrong_cards.add(socket.id);
             socket.emit("your_answer_is_not_correct");
         }
     });
