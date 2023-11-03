@@ -30,8 +30,6 @@ const get_a_card = () => {
 }
 
 const change_all_client_cards = (io) => {
-    console.log("Delayed for 3 miniutes.");
-
     if (a_card_deck.length < 12) {
         // cards is less than 1
         a_card_deck = a_card_set_org.slice();
@@ -96,7 +94,7 @@ console.log("Server started.");
 io.on("connection", (socket) => {
     console.log("Client has connected!");
 
-    socket.emit("new_cards_set", a_client_cards, o_score);
+    socket.emit("new_cards_set", a_client_cards, o_score, cards_set_id);
     if (setTimeout_id === null) {
         setTimeout_id = setTimeout(() => {
             change_all_client_cards(io);
@@ -105,15 +103,15 @@ io.on("connection", (socket) => {
 
     socket.on("reply", (ans, ans_cards_set_id) => {
         if (ans_cards_set_id !== cards_set_id) {
-            // this answer id is different from current question is
+            // Since this is an answer to an old set of cards, do not handle it as an incorrect answer
             return;
         }
 
         if (a_id_touch_wrong_cards.has(socket.id)) {
-            // this id has toushed wrong cards
+            // this id has already answered wrong cards
             return;
         }
-        
+
         // reset timer
         clearTimeout(setTimeout_id);
         setTimeout_id = setTimeout(() => {
@@ -128,23 +126,22 @@ io.on("connection", (socket) => {
             socket.emit("your_answer_is_correct");
             update_current_score(socket.id);
 
-                if (a_card_deck.length <= 0) {
-                    // cards is less than 1
-                    a_card_deck = a_card_set_org.slice();
+            if (a_card_deck.length <= 0) {
+                // cards is less than 1
+                a_card_deck = a_card_set_org.slice();
 
-                    for (let i = 0; i < c_card_num_on_field; i ++) {
-                        a_client_cards.splice(i, 1, get_a_card());
-                    }
-
-                } else {
-                    // Replace the used cards to new cards
-                    ans.forEach(idx => a_client_cards.splice(idx, 1, get_a_card()));
+                for (let i = 0; i < c_card_num_on_field; i ++) {
+                    a_client_cards.splice(i, 1, get_a_card());
                 }
+
+            } else {
+                // Replace the used cards to new cards
+                ans.forEach(idx => a_client_cards.splice(idx, 1, get_a_card()));
+            }
 
             cards_set_id ++;
             a_id_touch_wrong_cards = new Set();
             io.emit("new_cards_set", a_client_cards, o_score, cards_set_id);
-            console.log(o_score);
         } else {
             a_id_touch_wrong_cards.add(socket.id);
             socket.emit("your_answer_is_not_correct");
