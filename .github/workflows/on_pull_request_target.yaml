@@ -4,6 +4,8 @@ on:
 
 jobs:
   auto_merge_and_request_review:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 1
     env:
         GH_TOKEN: ${{ secrets.PAT_FOR_ON_PULL_REQUEST }}
         GH_REPO: ${{ github.repository }}
