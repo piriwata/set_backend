@@ -63,6 +63,34 @@ const update_current_score = (corrected_socket_id) => {
     }
 }
 
+const getCombinations = (array, k) => {
+    const result = [];
+
+    function combine(current, start) {
+        if (current.length === k) {
+            result.push([...current]);
+            return;
+        }
+
+        for (let i = start; i < array.length; i++) {
+            current.push(array[i]);
+            combine(current, i + 1);
+            current.pop();
+        }
+    }
+
+    combine([], 0);
+
+    return result;
+}
+
+const isCorrect = (answer_cards) => {
+    console.log(answer_cards);
+    return [0, 1, 2, 3]
+        .map((kind) => new Set([0, 1, 2].map(idx => answer_cards[idx][kind])))
+        .every(set => set.size !== 2);
+}
+
 /* Initialization of set card -> */
 a_color.forEach(co => {
     a_form.forEach(fo => {
@@ -118,11 +146,11 @@ io.on("connection", (socket) => {
             change_all_client_cards(io);
         }, c_time_out_ms);
 
-        const correct_answer = [0, 1, 2, 3]
-            .map((kind) => new Set([0, 1, 2].map(idx => a_client_cards[ans[idx]][kind])))
-            .every(set => set.size !== 2);
-
-        if (correct_answer) {
+        if (
+            ans.length === 0
+                ? getCombinations(a_client_cards, 3).every(combination => !isCorrect(combination))
+                : isCorrect(ans.map((idx) => a_client_cards[idx]))
+        ) {
             socket.emit("your_answer_is_correct");
             update_current_score(socket.id);
 
