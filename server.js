@@ -66,7 +66,7 @@ const update_current_score = (corrected_socket_id) => {
 const getCombinations = (array, k) => {
     const result = [];
 
-    function combine(current, start) {
+    const combine = (current, start) => {
         if (current.length === k) {
             result.push([...current]);
             return;
@@ -85,10 +85,10 @@ const getCombinations = (array, k) => {
 }
 
 const isCorrect = (answer_cards) => {
-    console.log(answer_cards);
-    return [0, 1, 2, 3]
-        .map((kind) => new Set([0, 1, 2].map(idx => answer_cards[idx][kind])))
-        .every(set => set.size !== 2);
+    return answer_cards.length === 3 &&
+        [0, 1, 2, 3]
+            .map((kind) => new Set([0, 1, 2].map(idx => answer_cards[idx][kind])))
+            .every(set => set.size !== 2);
 }
 
 /* Initialization of set card -> */
