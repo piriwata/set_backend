@@ -154,6 +154,11 @@ io.on("connection", (socket) => {
             socket.emit("your_answer_is_correct");
             update_current_score(socket.id);
 
+            // Found out "no solve", replaces the first three cards.
+            if (ans.length === 0) {
+                ans = [0, 1, 2];
+            }
+
             if (a_card_deck.length <= 0) {
                 // cards is less than 1
                 a_card_deck = a_card_set_org.slice();
