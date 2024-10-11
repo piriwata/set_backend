@@ -6,7 +6,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"socket.io": "^4.7"
+		"socket.io": "^4.8"
 	},
 	"engines": {
 		"node": ">=16"
